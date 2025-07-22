@@ -1341,6 +1341,14 @@ impl Default for DndEdgeWorkspaceSwitch {
 pub struct HotCorners {
     #[knuffel(child)]
     pub off: bool,
+    #[knuffel(child)]
+    pub top_left: bool,
+    #[knuffel(child)]
+    pub top_right: bool,
+    #[knuffel(child)]
+    pub bottom_left: bool,
+    #[knuffel(child)]
+    pub bottom_right: bool,
 }
 
 #[derive(knuffel::Decode, Debug, Clone, Copy, PartialEq)]
@@ -4792,6 +4800,10 @@ mod tests {
                 },
                 hot_corners: HotCorners {
                     off: false,
+                    top_left: false,
+                    top_right: false,
+                    bottom_left: false,
+                    bottom_right: false,
                 },
             },
             overview: Overview {
