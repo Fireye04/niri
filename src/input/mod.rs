@@ -2298,7 +2298,7 @@ impl State {
         pointer.frame(self);
 
         // contents_under() will return no surface when the hot corner should trigger.
-        let hot_corners = self.niri.config.borrow().gestures.hot_corners;
+        let mut hot_corners = self.niri.config.borrow().gestures.hot_corners;
         if !hot_corners.off
             && pointer.current_focus().is_none()
             && !self.niri.screenshot_ui.is_open()
@@ -2313,10 +2313,15 @@ impl State {
                 let hot_bottom_left = Rectangle::new(Point::new(0., (size.h - 1) as f64), Size::from((1., 1.)));
                 let hot_bottom_right = Rectangle::new(Point::new((size.w - 1) as f64, (size.h - 1) as f64), Size::from((1., 1.)));
 
-                let inside_top_left = hot_top_left.contains(pos_within_output);
-                let inside_top_right = hot_top_right.contains(pos_within_output);
-                let inside_bottom_left = hot_bottom_left.contains(pos_within_output);
-                let inside_bottom_right = hot_bottom_right.contains(pos_within_output);
+                //If no corners are set, but hot corners are enabled, enable top_left hot corner.
+                if !(hot_corners.top_left || hot_corners.top_right || hot_corners.bottom_left || hot_corners.bottom_right){
+                    hot_corners.top_left = true;
+                }
+
+                let inside_top_left = hot_top_left.contains(pos_within_output) && hot_corners.top_left;
+                let inside_top_right = hot_top_right.contains(pos_within_output) && hot_corners.top_right;
+                let inside_bottom_left = hot_bottom_left.contains(pos_within_output) && hot_corners.bottom_left;
+                let inside_bottom_right = hot_bottom_right.contains(pos_within_output) && hot_corners.bottom_right;
 
                 let inside_hot_corner = inside_top_left || inside_top_right || inside_bottom_left || inside_bottom_right;
 
@@ -2401,7 +2406,7 @@ impl State {
         pointer.frame(self);
 
         // contents_under() will return no surface when the hot corner should trigger.
-        let hot_corners = self.niri.config.borrow().gestures.hot_corners;
+        let mut hot_corners = self.niri.config.borrow().gestures.hot_corners;
         if !hot_corners.off
             && pointer.current_focus().is_none()
             && !self.niri.screenshot_ui.is_open()
@@ -2416,10 +2421,15 @@ impl State {
                 let hot_bottom_left = Rectangle::new(Point::new(0., (size.h - 1) as f64), Size::from((1., 1.)));
                 let hot_bottom_right = Rectangle::new(Point::new((size.w - 1) as f64, (size.h - 1) as f64), Size::from((1., 1.)));
 
-                let inside_top_left = hot_top_left.contains(pos_within_output);
-                let inside_top_right = hot_top_right.contains(pos_within_output);
-                let inside_bottom_left = hot_bottom_left.contains(pos_within_output);
-                let inside_bottom_right = hot_bottom_right.contains(pos_within_output);
+                //If no corners are set, but hot corners are enabled, enable top_left hot corner.
+                if !(hot_corners.top_left || hot_corners.top_right || hot_corners.bottom_left || hot_corners.bottom_right){
+                    hot_corners.top_left = true;
+                }
+
+                let inside_top_left = hot_top_left.contains(pos_within_output) && hot_corners.top_left;
+                let inside_top_right = hot_top_right.contains(pos_within_output) && hot_corners.top_right;
+                let inside_bottom_left = hot_bottom_left.contains(pos_within_output) && hot_corners.bottom_left;
+                let inside_bottom_right = hot_bottom_right.contains(pos_within_output) && hot_corners.bottom_right;
 
                 let inside_hot_corner = inside_top_left || inside_top_right || inside_bottom_left || inside_bottom_right;
                 if inside_hot_corner && !was_inside_hot_corner {
