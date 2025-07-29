@@ -3123,16 +3123,8 @@ impl Niri {
             return false;
         }
 
-        let mut hot_corners = self.config.borrow().gestures.hot_corners;
-        let name = output.user_data().get::<OutputName>().unwrap();
-        let config = self.config.borrow();
-        let opconf = config.outputs.find(name);
-        if opconf.is_some() {
-            if let Some(hc) = opconf.unwrap().hot_corners {
-                hot_corners = hc;
-            }
-        }
-
+        //TODO
+        let hot_corners = self.config.borrow().gestures.hot_corners;
         if !hot_corners.off {
             let output_size = output_size(output);
             let transform = output.current_transform();
