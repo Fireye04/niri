@@ -2309,7 +2309,9 @@ impl State {
                 let opconf = config.outputs.find(name);
 
                 if opconf.is_some() {
-                    hot_corners = opconf.unwrap().hot_corners;
+                    if let Some(hc) = opconf.unwrap().hot_corners {
+                        hot_corners = hc;
+                    }
                 }
                 if !hot_corners.off {
                     let size = output.current_mode().unwrap().size;
@@ -2441,7 +2443,9 @@ impl State {
                 let opconf = config.outputs.find(name);
 
                 if opconf.is_some() {
-                    hot_corners = opconf.unwrap().hot_corners;
+                    if let Some(hc) = opconf.unwrap().hot_corners {
+                        hot_corners = hc;
+                    }
                 }
 
                 if !hot_corners.off {
