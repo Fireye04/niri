@@ -462,8 +462,8 @@ pub struct Output {
     pub background_color: Option<Color>,
     #[knuffel(child)]
     pub backdrop_color: Option<Color>,
-    #[knuffel(child, default)]
-    pub hot_corners: HotCorners,
+    #[knuffel(child)]
+    pub hot_corners: Option<HotCorners>,
 }
 
 impl Output {
@@ -493,13 +493,7 @@ impl Default for Output {
             variable_refresh_rate: None,
             background_color: None,
             backdrop_color: None,
-            hot_corners: HotCorners {
-                off: true,
-                top_left: false,
-                top_right: false,
-                bottom_left: false,
-                bottom_right: false,
-            },
+            hot_corners: None,
         }
     }
 }
@@ -4427,13 +4421,15 @@ mod tests {
                             },
                         ),
                         backdrop_color: None,
-                        hot_corners: HotCorners {
-                            off: true,
-                            top_left: true,
-                            top_right: true,
-                            bottom_left: true,
-                            bottom_right: true,
-                        },
+                        hot_corners: Some(
+                            HotCorners {
+                                off: true,
+                                top_left: true,
+                                top_right: true,
+                                bottom_left: true,
+                                bottom_right: true,
+                            },
+                        ),
                     },
                 ],
             ),
