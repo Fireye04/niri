@@ -6,7 +6,7 @@ use std::time::Duration;
 
 use calloop::timer::{TimeoutAction, Timer};
 use input::event::gesture::GestureEventCoordinates as _;
-use niri_config::{Action, Bind, Binds, Key, ModKey, Modifiers, SwitchBinds, Trigger, OutputName};
+use niri_config::{Action, Bind, Binds, Key, ModKey, Modifiers, OutputName, SwitchBinds, Trigger};
 use niri_ipc::LayoutSwitchTarget;
 use smithay::backend::input::{
     AbsolutePositionEvent, Axis, AxisSource, ButtonState, Device, DeviceCapability, Event,
@@ -2304,11 +2304,10 @@ impl State {
             && !self.niri.screenshot_ui.is_open()
         {
             if let Some((output, pos_within_output)) = self.niri.output_under(pos) {
-
                 let name = output.user_data().get::<OutputName>().unwrap();
                 let config = self.niri.config.borrow();
                 let opconf = config.outputs.find(name);
-            
+
                 if opconf.is_some() {
                     hot_corners = opconf.unwrap().hot_corners;
                 }
@@ -2317,18 +2316,38 @@ impl State {
                     let transform = output.current_transform();
                     let size = transform.transform_size(size);
 
-
                     let hot_top_left = Rectangle::new(Point::new(0., 0.), Size::from((1., 1.)));
-                    let hot_top_right = Rectangle::new(Point::new((size.w - 1) as f64, 0.), Size::from((1., 1.)));
-                    let hot_bottom_left = Rectangle::new(Point::new(0., (size.h - 1) as f64), Size::from((1., 1.)));
-                    let hot_bottom_right = Rectangle::new(Point::new((size.w - 1) as f64, (size.h - 1) as f64), Size::from((1., 1.)));
+                    let hot_top_right =
+                        Rectangle::new(Point::new((size.w - 1) as f64, 0.), Size::from((1., 1.)));
+                    let hot_bottom_left =
+                        Rectangle::new(Point::new(0., (size.h - 1) as f64), Size::from((1., 1.)));
+                    let hot_bottom_right = Rectangle::new(
+                        Point::new((size.w - 1) as f64, (size.h - 1) as f64),
+                        Size::from((1., 1.)),
+                    );
+                    //if no corners are set, but hot corners are enabled, enable top_left hot
+                    //corner.
+                    if !(hot_corners.top_left
+                        || hot_corners.top_right
+                        || hot_corners.bottom_left
+                        || hot_corners.bottom_right)
+                    {
+                        hot_corners.top_left = true;
+                    }
 
-                    let inside_top_left = hot_top_left.contains(pos_within_output) && hot_corners.top_left;
-                    let inside_top_right = hot_top_right.contains(pos_within_output) && hot_corners.top_right;
-                    let inside_bottom_left = hot_bottom_left.contains(pos_within_output) && hot_corners.bottom_left;
-                    let inside_bottom_right = hot_bottom_right.contains(pos_within_output) && hot_corners.bottom_right;
+                    let inside_top_left =
+                        hot_top_left.contains(pos_within_output) && hot_corners.top_left;
+                    let inside_top_right =
+                        hot_top_right.contains(pos_within_output) && hot_corners.top_right;
+                    let inside_bottom_left =
+                        hot_bottom_left.contains(pos_within_output) && hot_corners.bottom_left;
+                    let inside_bottom_right =
+                        hot_bottom_right.contains(pos_within_output) && hot_corners.bottom_right;
 
-                    let inside_hot_corner = inside_top_left || inside_top_right || inside_bottom_left || inside_bottom_right;
+                    let inside_hot_corner = inside_top_left
+                        || inside_top_right
+                        || inside_bottom_left
+                        || inside_bottom_right;
                     if inside_hot_corner && !was_inside_hot_corner {
                         self.niri.layout.toggle_overview();
                     }
@@ -2417,11 +2436,10 @@ impl State {
             && !self.niri.screenshot_ui.is_open()
         {
             if let Some((output, pos_within_output)) = self.niri.output_under(pos) {
-
                 let name = output.user_data().get::<OutputName>().unwrap();
                 let config = self.niri.config.borrow();
                 let opconf = config.outputs.find(name);
-            
+
                 if opconf.is_some() {
                     hot_corners = opconf.unwrap().hot_corners;
                 }
@@ -2441,17 +2459,29 @@ impl State {
                         Size::from((1., 1.)),
                     );
 
-                    //if no corners are set, but hot corners are enabled, enable top_left hot corner.
-                    if !(hot_corners.top_left || hot_corners.top_right || hot_corners.bottom_left || hot_corners.bottom_right){
+                    //if no corners are set, but hot corners are enabled, enable top_left hot
+                    //corner.
+                    if !(hot_corners.top_left
+                        || hot_corners.top_right
+                        || hot_corners.bottom_left
+                        || hot_corners.bottom_right)
+                    {
                         hot_corners.top_left = true;
                     }
 
-                    let inside_top_left = hot_top_left.contains(pos_within_output) && hot_corners.top_left;
-                    let inside_top_right = hot_top_right.contains(pos_within_output) && hot_corners.top_right;
-                    let inside_bottom_left = hot_bottom_left.contains(pos_within_output) && hot_corners.bottom_left;
-                    let inside_bottom_right = hot_bottom_right.contains(pos_within_output) && hot_corners.bottom_right;
+                    let inside_top_left =
+                        hot_top_left.contains(pos_within_output) && hot_corners.top_left;
+                    let inside_top_right =
+                        hot_top_right.contains(pos_within_output) && hot_corners.top_right;
+                    let inside_bottom_left =
+                        hot_bottom_left.contains(pos_within_output) && hot_corners.bottom_left;
+                    let inside_bottom_right =
+                        hot_bottom_right.contains(pos_within_output) && hot_corners.bottom_right;
 
-                    let inside_hot_corner = inside_top_left || inside_top_right || inside_bottom_left || inside_bottom_right;
+                    let inside_hot_corner = inside_top_left
+                        || inside_top_right
+                        || inside_bottom_left
+                        || inside_bottom_right;
                     if inside_hot_corner && !was_inside_hot_corner {
                         self.niri.layout.toggle_overview();
                     }
