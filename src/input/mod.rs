@@ -2320,11 +2320,11 @@ impl State {
 
                     let hot_top_left = Rectangle::new(Point::new(0., 0.), Size::from((1., 1.)));
                     let hot_top_right =
-                        Rectangle::new(Point::new((size.w - 1) as f64, 0.), Size::from((1., 1.)));
+                        Rectangle::new(Point::new(size.w - 1., 0.), Size::from((1., 1.)));
                     let hot_bottom_left =
-                        Rectangle::new(Point::new(0., (size.h - 1) as f64), Size::from((1., 1.)));
+                        Rectangle::new(Point::new(0., size.h - 1.), Size::from((1., 1.)));
                     let hot_bottom_right = Rectangle::new(
-                        Point::new((size.w - 1) as f64, (size.h - 1) as f64),
+                        Point::new(size.w - 1., size.h - 1.),
                         Size::from((1., 1.)),
                     );
                     //if no corners are set, but hot corners are enabled, enable top_left hot
@@ -2455,11 +2455,11 @@ impl State {
 
                     let hot_top_left = Rectangle::new(Point::new(0., 0.), Size::from((1., 1.)));
                     let hot_top_right =
-                        Rectangle::new(Point::new((size.w - 1) as f64, 0.), Size::from((1., 1.)));
+                        Rectangle::new(Point::new(size.w - 1., 0.), Size::from((1., 1.)));
                     let hot_bottom_left =
-                        Rectangle::new(Point::new(0., (size.h - 1) as f64), Size::from((1., 1.)));
+                        Rectangle::new(Point::new(0., size.h - 1.), Size::from((1., 1.)));
                     let hot_bottom_right = Rectangle::new(
-                        Point::new((size.w - 1) as f64, (size.h - 1) as f64),
+                        Point::new(size.w - 1., size.h - 1.),
                         Size::from((1., 1.)),
                     );
 
