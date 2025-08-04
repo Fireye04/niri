@@ -1881,12 +1881,8 @@ impl State {
 
         match &cast.target {
             CastTarget::Nothing => {
-                let config = self.niri.config.borrow();
-                let wait_for_sync = config.debug.wait_for_frame_completion_in_pipewire;
-                drop(config);
-
                 self.backend.with_primary_renderer(|renderer| {
-                    if cast.dequeue_buffer_and_clear(renderer, wait_for_sync) {
+                    if cast.dequeue_buffer_and_clear(renderer) {
                         cast.last_frame_time = get_monotonic_time();
                     }
                 });
@@ -1926,10 +1922,6 @@ impl State {
                     }
                 }
 
-                let config = self.niri.config.borrow();
-                let wait_for_sync = config.debug.wait_for_frame_completion_in_pipewire;
-                drop(config);
-
                 self.backend.with_primary_renderer(|renderer| {
                     // FIXME: pointer.
                     let elements = mapped
@@ -1937,13 +1929,7 @@ impl State {
                         .rev()
                         .collect::<Vec<_>>();
 
-                    if cast.dequeue_buffer_and_render(
-                        renderer,
-                        &elements,
-                        bbox.size,
-                        scale,
-                        wait_for_sync,
-                    ) {
+                    if cast.dequeue_buffer_and_render(renderer, &elements, bbox.size, scale) {
                         cast.last_frame_time = get_monotonic_time();
                     }
                 });
@@ -2029,7 +2015,8 @@ impl State {
                 let pw = if let Some(pw) = &self.niri.pipewire {
                     pw
                 } else {
-                    match PipeWire::new(&self.niri.event_loop, self.niri.pw_to_niri.clone()) {
+                    match PipeWire::new(self.niri.event_loop.clone(), self.niri.pw_to_niri.clone())
+                    {
                         Ok(pipewire) => self.niri.pipewire.insert(pipewire),
                         Err(err) => {
                             warn!(
@@ -3147,9 +3134,9 @@ impl Niri {
         }
 
         if !hot_corners.off {
-            let size = output.current_mode().unwrap().size;
+            let output_size = output_size(output);
             let transform = output.current_transform();
-            let size = transform.transform_size(size);
+            let size = transform.transform_size(output_size);
 
             let hot_top_left = Rectangle::new(Point::new(0., 0.), Size::from((1., 1.)));
             let hot_top_right =
@@ -3451,10 +3438,56 @@ impl Niri {
                 .or_else(|| layer_toplevel_under(Layer::Bottom))
                 .or_else(|| layer_toplevel_under(Layer::Background));
         } else {
-            let hot_corners = self.config.borrow().gestures.hot_corners;
+            let mut hot_corners = self.config.borrow().gestures.hot_corners;
+            let name = output.user_data().get::<OutputName>().unwrap();
+            let config = self.config.borrow();
+            let opconf = config.outputs.find(name);
+
+            if opconf.is_some() {
+                if let Some(hc) = opconf.unwrap().hot_corners {
+                    hot_corners = hc;
+                }
+            }
+
             if !hot_corners.off {
-                let hot_corner = Rectangle::from_size(Size::from((1., 1.)));
-                if hot_corner.contains(pos_within_output) {
+                let output_size = output_size(output);
+                let transform = output.current_transform();
+                let size = transform.transform_size(output_size);
+
+                let hot_top_left = Rectangle::new(Point::new(0., 0.), Size::from((1., 1.)));
+                let hot_top_right =
+                    Rectangle::new(Point::new((size.w - 1.) as f64, 0.), Size::from((1., 1.)));
+                let hot_bottom_left =
+                    Rectangle::new(Point::new(0., (size.h - 1.) as f64), Size::from((1., 1.)));
+                let hot_bottom_right = Rectangle::new(
+                    Point::new((size.w - 1.) as f64, (size.h - 1.) as f64),
+                    Size::from((1., 1.)),
+                );
+
+                //if no corners are set, but hot corners are enabled, enable top_left hot
+                //corner.
+                if !(hot_corners.top_left
+                    || hot_corners.top_right
+                    || hot_corners.bottom_left
+                    || hot_corners.bottom_right)
+                {
+                    hot_corners.top_left = true;
+                }
+
+                let inside_top_left =
+                    hot_top_left.contains(pos_within_output) && hot_corners.top_left;
+                let inside_top_right =
+                    hot_top_right.contains(pos_within_output) && hot_corners.top_right;
+                let inside_bottom_left =
+                    hot_bottom_left.contains(pos_within_output) && hot_corners.bottom_left;
+                let inside_bottom_right =
+                    hot_bottom_right.contains(pos_within_output) && hot_corners.bottom_right;
+
+                let inside_hot_corner = inside_top_left
+                    || inside_top_right
+                    || inside_bottom_left
+                    || inside_bottom_right;
+                if inside_hot_corner {
                     return rv;
                 }
             }
@@ -5033,16 +5066,12 @@ impl Niri {
 
         let scale = Scale::from(output.current_scale().fractional_scale());
 
-        let config = self.config.borrow();
-        let wait_for_sync = config.debug.wait_for_frame_completion_in_pipewire;
-        drop(config);
-
         let mut elements = None;
         let mut casts_to_stop = vec![];
 
         let mut casts = mem::take(&mut self.casts);
         for cast in &mut casts {
-            if !cast.is_active.get() {
+            if !cast.is_active() {
                 continue;
             }
 
@@ -5059,7 +5088,7 @@ impl Niri {
                 }
             }
 
-            if cast.check_time_and_schedule(&self.event_loop, output, target_presentation_time) {
+            if cast.check_time_and_schedule(output, target_presentation_time) {
                 continue;
             }
 
@@ -5068,7 +5097,7 @@ impl Niri {
                 self.render(renderer, output, true, RenderTarget::Screencast)
             });
 
-            if cast.dequeue_buffer_and_render(renderer, elements, size, scale, wait_for_sync) {
+            if cast.dequeue_buffer_and_render(renderer, elements, size, scale) {
                 cast.last_frame_time = target_presentation_time;
             }
         }
@@ -5090,15 +5119,11 @@ impl Niri {
 
         let scale = Scale::from(output.current_scale().fractional_scale());
 
-        let config = self.config.borrow();
-        let wait_for_sync = config.debug.wait_for_frame_completion_in_pipewire;
-        drop(config);
-
         let mut casts_to_stop = vec![];
 
         let mut casts = mem::take(&mut self.casts);
         for cast in &mut casts {
-            if !cast.is_active.get() {
+            if !cast.is_active() {
                 continue;
             }
 
@@ -5125,15 +5150,14 @@ impl Niri {
                 }
             }
 
-            if cast.check_time_and_schedule(&self.event_loop, output, target_presentation_time) {
+            if cast.check_time_and_schedule(output, target_presentation_time) {
                 continue;
             }
 
             // FIXME: pointer.
             let elements: Vec<_> = mapped.render_for_screen_cast(renderer, scale).collect();
 
-            if cast.dequeue_buffer_and_render(renderer, &elements, bbox.size, scale, wait_for_sync)
-            {
+            if cast.dequeue_buffer_and_render(renderer, &elements, bbox.size, scale) {
                 cast.last_frame_time = target_presentation_time;
             }
         }

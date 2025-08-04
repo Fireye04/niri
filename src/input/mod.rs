@@ -45,7 +45,7 @@ use crate::layout::{ActivateWindow, LayoutElement as _};
 use crate::niri::{CastTarget, PointerVisibility, State};
 use crate::ui::screenshot_ui::ScreenshotUi;
 use crate::utils::spawning::spawn;
-use crate::utils::{center, get_monotonic_time, ResizeEdge};
+use crate::utils::{center, get_monotonic_time, output_size, ResizeEdge};
 
 pub mod backend_ext;
 pub mod move_grab;
@@ -2314,17 +2314,17 @@ impl State {
                     }
                 }
                 if !hot_corners.off {
-                    let size = output.current_mode().unwrap().size;
+                    let output_size = output_size(output);
                     let transform = output.current_transform();
-                    let size = transform.transform_size(size);
+                    let size = transform.transform_size(output_size);
 
                     let hot_top_left = Rectangle::new(Point::new(0., 0.), Size::from((1., 1.)));
                     let hot_top_right =
-                        Rectangle::new(Point::new((size.w - 1) as f64, 0.), Size::from((1., 1.)));
+                        Rectangle::new(Point::new((size.w - 1.) as f64, 0.), Size::from((1., 1.)));
                     let hot_bottom_left =
-                        Rectangle::new(Point::new(0., (size.h - 1) as f64), Size::from((1., 1.)));
+                        Rectangle::new(Point::new(0., (size.h - 1.) as f64), Size::from((1., 1.)));
                     let hot_bottom_right = Rectangle::new(
-                        Point::new((size.w - 1) as f64, (size.h - 1) as f64),
+                        Point::new((size.w - 1.) as f64, (size.h - 1.) as f64),
                         Size::from((1., 1.)),
                     );
                     //if no corners are set, but hot corners are enabled, enable top_left hot
@@ -2449,17 +2449,17 @@ impl State {
                 }
 
                 if !hot_corners.off {
-                    let size = output.current_mode().unwrap().size;
+                    let output_size = output_size(output);
                     let transform = output.current_transform();
-                    let size = transform.transform_size(size);
+                    let size = transform.transform_size(output_size);
 
                     let hot_top_left = Rectangle::new(Point::new(0., 0.), Size::from((1., 1.)));
                     let hot_top_right =
-                        Rectangle::new(Point::new((size.w - 1) as f64, 0.), Size::from((1., 1.)));
+                        Rectangle::new(Point::new((size.w - 1.) as f64, 0.), Size::from((1., 1.)));
                     let hot_bottom_left =
-                        Rectangle::new(Point::new(0., (size.h - 1) as f64), Size::from((1., 1.)));
+                        Rectangle::new(Point::new(0., (size.h - 1.) as f64), Size::from((1., 1.)));
                     let hot_bottom_right = Rectangle::new(
-                        Point::new((size.w - 1) as f64, (size.h - 1) as f64),
+                        Point::new((size.w - 1.) as f64, (size.h - 1.) as f64),
                         Size::from((1., 1.)),
                     );
 
