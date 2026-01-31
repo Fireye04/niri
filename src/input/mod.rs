@@ -2631,6 +2631,7 @@ impl State {
         // contents_under() will return no surface when the hot corner should trigger, so
         // pointer.motion() will set the current focus to None.
         if under.hot_corner && pointer.current_focus().is_none() {
+            info!("{}", event.time());
             // Main pressure constants
             let dividend = 14.;
             let pressure_cap = 20;
