@@ -2537,6 +2537,22 @@ impl State {
             }
         }
 
+        // TODO: constrain pointer to hot corners
+        if self.niri.pointer_inside_hot_corner {
+            // TODO: Handle other hot corner pos
+            if let Some(output) = self.niri.global_space.output_under(pos).next() {
+                // The pointer was previously on some output. Clip the movement against its
+                // boundaries.
+                let geom = self.niri.global_space.output_geometry(output).unwrap();
+                new_pos.x = new_pos
+                    .x
+                    .clamp(geom.loc.x as f64, (geom.loc.x + geom.size.w - 1) as f64);
+                new_pos.y = new_pos
+                    .y
+                    .clamp(geom.loc.y as f64, (geom.loc.y + geom.size.h - 1) as f64);
+            }
+        }
+
         if self
             .niri
             .global_space
@@ -2653,7 +2669,7 @@ impl State {
             let target = 150;
             let timeout = 1000000;
 
-            let threshold = event.time() - timeout;
+            let threshold = event.time().micros() - timeout;
 
             if
             /*(!was_inside_hot_corner
@@ -2729,7 +2745,9 @@ impl State {
             }
 
             // Append to event stream
-            self.niri.hot_corner_event_stream.push((event.time(), vec));
+            self.niri
+                .hot_corner_event_stream
+                .push((event.time().micros(), vec));
 
             self.niri.pointer_inside_hot_corner = true;
         } else {
